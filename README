@@ -1,0 +1,17 @@
+Idea
+
+To write Newlisp code as if you were writing HTML.
+
+To achieve this every HTML5 tag should have it's counterpart function.
+
+Every function accepts two string parameters: first one goes inside tag, as in 
+
+<input type="text">
+
+and the second one goes between opening and closing tag, as in
+
+<p>This goes between</p>
+
+Further parameters are concatenated to second one.
+
+Every function returns a string with the computed html code.
