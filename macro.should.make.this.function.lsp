@@ -4,4 +4,5 @@
 ; just a quick test to see how the function should look so I can program the macro which will create them
 
 (define (html-tag innerCode betweenTagsCode)
-	(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") betweenTagsCode "</html>"))
+	; as a side effect, if innerCode is nil, the 'if' properly resolves so the 'append' don't complain
+	(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") (if (nil? betweenTagsCode) "" betweenTagsCode) "</html>"))
