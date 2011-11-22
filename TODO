@@ -7,6 +7,8 @@ and be able to call it simpler, like this:
 
 (html "lang=en")
 
+- make a function to properly indent html code, so the output is nicer.
+
 - as is written now, the code isn't appropriate to define snippets of code.
   Because each tag opens and closes inside the function. There're two possible
   solutions:
@@ -22,4 +24,5 @@ are perhaps the most used split since they define large chunks of code, but the
 rest of the tags will be opened and closed in the same context most of the
 time. So is it necessary to create the full set of 3 functions (open, close,
 open and close) for each tag? Maybe I should go with the parametrized version.
+
 
