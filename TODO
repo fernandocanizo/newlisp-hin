@@ -23,7 +23,3 @@ rest of the tags will be opened and closed in the same context most of the
 time. So is it necessary to create the full set of 3 functions (open, close,
 open and close) for each tag? Maybe I should go with the parametrized version.
 
-- Maybe I can simplify macro, right now I'm maintaining two possible returns, I
-  should move the 'if' that fixes the symbol issue inside and make only one
-  definition.
-
