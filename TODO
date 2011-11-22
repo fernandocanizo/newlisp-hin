@@ -1,0 +1,24 @@
+- make function auto quote innerTag values everytime it finds an equal sign, to
+  avoid having to call like this:
+
+(html "lang=\"en\"")
+
+and be able to call it simpler, like this:
+
+(html "lang=en")
+
+- as is written now, the code isn't appropriate to define snippets of code.
+  Because each tag opens and closes inside the function. There're two possible
+  solutions:
+
+	- to make the functions accept optional parameters defining the 3 possible
+	  actions: open tag, close tag, open and close tag
+
+	- to create another pair of functions for opening and closing a tag along
+	  with the creation of the one which opens and close
+
+Also I have to consider not every tag is used in split way, html, head, body
+are perhaps the most used split since they define large chunks of code, but the
+rest of the tags will be opened and closed in the same context most of the
+time. So is it necessary to create the full set of 3 functions (open, close,
+open and close) for each tag? Maybe I should go with the parametrized version.
