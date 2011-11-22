@@ -12,12 +12,13 @@
 		(join (list "\n<--\n" aComment "\n-->\n"))))
 
 ; magic happens here
-; TODO: this macro is unfinished, needs to accept at least two params for inner code and between-tags code
 (define-macro (hin:hin tagName)
 	(if (symbol? tagName)
-		(eval (list 'define (list (sym (eval tagName))) '(println "hi")))
+		(eval (list 'define (list (sym (eval tagName)) 'innerCode 'betweenTagsContent)
+			'(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") betweenTagsContent "</html>")))
 		; else
-		(eval (list 'define (list (sym tagName)) '(println "hi")))))
+		(eval (list 'define (list (sym tagName) 'innerCode 'betweenTagsContent)
+			'(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") betweenTagsContent "</html>")))))
 
 
 (set 'htmlTags '(
