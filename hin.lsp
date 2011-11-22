@@ -15,10 +15,12 @@
 (define-macro (hin:hin tagName)
 	(if (symbol? tagName)
 		(eval (list 'define (list (sym (eval tagName)) 'innerCode 'betweenTagsContent)
-			'(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") (if (nil? betweenTagsContent) "" betweenTagsContent) "</html>")))
+			(list 'append "<" (eval tagName) '(if (> (length innerCode) 0) (append " " innerCode ">") ">") '(if (nil? betweenTagsContent) "" betweenTagsContent) "</" (eval tagName) ">")))
+
 		; else
 		(eval (list 'define (list (sym tagName) 'innerCode 'betweenTagsContent)
-			'(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") (if (nil? betweenTagsContent) "" betweenTagsContent) "</html>")))))
+			(list 'append "<" (eval tagName) '(if (> (length innerCode) 0) (append " " innerCode ">") ">") '(if (nil? betweenTagsContent) "" betweenTagsContent) "</" (eval tagName) ">")))))
+
 
 
 (set 'htmlTags '(
