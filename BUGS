@@ -1,0 +1,8 @@
+- the html-tag functions created by the hin macro accepts only a couple of
+  parameters, first one is the inner code, second one is the content between
+  tags. The rest are ignored, so this code:
+
+(html "something inside" ; -> first parameter
+	(head ""
+		(title "class=mango" "the title")) ; second parameter to html (the full head returned string)
+	(body "..." "...")) ; -> it doesn't matter, from here onwards all is IGNORED
