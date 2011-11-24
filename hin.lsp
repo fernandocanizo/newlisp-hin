@@ -13,12 +13,18 @@
 
 ; magic happens here
 (define-macro (hin:hin tagName)
-	(eval (list 'define (list (sym (if (symbol? tagName) (eval tagName) tagName)) (list 'innerCode "") 'betweenTagsContent)
+	(eval (list 'define (list (sym (if (symbol? tagName) (eval tagName) tagName)) (list 'innerCode ""))
 		(list 'append "<" (eval tagName)
 			'(if (> (length innerCode) 0) (append " " innerCode ">") ">")
-			'(if (nil? betweenTagsContent) "" betweenTagsContent)
+			(list 'let '(betweenTagsContent "")
+				(list 'doargs '(arg)
+					(list 'set ''betweenTagsContent
+						(list 'append 'betweenTagsContent
+							'(if (nil? arg) "" arg))))
+				'betweenTagsContent)
 			"</" (eval tagName) ">"))))
 
+; 			'(if (nil? betweenTagsContent) "" betweenTagsContent)
 
 
 (set 'htmlTags '(
