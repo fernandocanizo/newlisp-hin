@@ -13,7 +13,7 @@
 
 ; magic happens here
 (define-macro (hin:hin tagName)
-	(eval (list 'define (list (sym (if (symbol? tagName) (eval tagName) tagName)) 'innerCode 'betweenTagsContent)
+	(eval (list 'define (list (sym (if (symbol? tagName) (eval tagName) tagName)) (list 'innerCode "") 'betweenTagsContent)
 		(list 'append "<" (eval tagName)
 			'(if (> (length innerCode) 0) (append " " innerCode ">") ">")
 			'(if (nil? betweenTagsContent) "" betweenTagsContent)
