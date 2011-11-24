@@ -1,12 +1,3 @@
-- make function auto quote innerTag values everytime it finds an equal sign, to
-  avoid having to call like this:
-
-(html "lang=\"en\"")
-
-and be able to call it simpler, like this:
-
-(html "lang=en")
-
 - make a function to properly indent html code, so the output is nicer.
 
 - as is written now, the code isn't appropriate to define snippets of code.

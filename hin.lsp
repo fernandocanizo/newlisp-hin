@@ -11,11 +11,19 @@
 		; else
 		(join (list "\n<--\n" aComment "\n-->\n"))))
 
+
+(define (quote-inner-code innerCode)
+	; TODO: instead of 2048 and 512 should use PCRE_UTF8 and PCRE_UNGREEDY, but newlisp says to me:
+	; ERR: value expected in function replace : PCRE_UTF8
+	; find out why is not taking the constant
+	(replace {=(\S+)(\s|$)} innerCode (append "=\"" $1 "\"" $2) (| 2048 512)))
+
+
 ; magic happens here
 (define-macro (hin:hin tagName)
 	(eval (list 'define (list (sym (if (symbol? tagName) (eval tagName) tagName)) (list 'innerCode ""))
 		(list 'append "<" (eval tagName)
-			'(if (> (length innerCode) 0) (append " " innerCode ">") ">")
+			'(if (> (length innerCode) 0) (append " " (quote-inner-code innerCode) ">") ">")
 			(list 'let '(betweenTagsContent "")
 				(list 'doargs '(arg)
 					(list 'set ''betweenTagsContent
@@ -23,8 +31,6 @@
 							'(if (nil? arg) "" arg))))
 				'betweenTagsContent)
 			"</" (eval tagName) ">"))))
-
-; 			'(if (nil? betweenTagsContent) "" betweenTagsContent)
 
 
 (set 'htmlTags '(
