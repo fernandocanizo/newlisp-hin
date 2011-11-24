@@ -1,17 +1,76 @@
-Idea
+HTML Domain Specific Language (DSL) for newLISP
+———————————————————————————————————————————————
 
-To write Newlisp code as if you were writing HTML.
+The idea is to be able to write newlisp code as if you were writing HTML,
+avoiding the use of template tags.
 
-To achieve this every HTML5 tag should have it's counterpart function.
+So instead of writing:
 
-Every function accepts two string parameters: first one goes inside tag, as in 
+<html lang="en">
+	<head>
+		<title><% (print "This is my title") %></title>
+	</head>
+</html>
 
-<input type="text">
+Were you have to use an opening <% and a closing %> each time you need to
+insert newlisp code, you write:
 
-and the second one goes between opening and closing tag, as in
+(html "lang=en"
+	(head ""
+		(title "" "This is my title")))
 
-<p>This goes between</p>
+And everything is newlisp code.
+
+To achieve this every HTML5 tag has it's counterpart function.
+
+Every function needs at least one parameter for the inner code, hence the empty
+strings in the example above. Also they can have any number of parameters
+after, which are considered to be the code or text between opening and closing
+tag.
 
 Further parameters are concatenated to second one.
 
 Every function returns a string with the computed html code.
+
+			
+Nomenclature
+————————————
+
+inner code: the code inside the html tag, for example:
+
+<span innerCode></span>
+<span class="foo" id="bar"></span>
+
+between content: the text or code that goes between the opening and closing tag, for example:
+
+<span>betweenContent</span>
+<span>Something that goes inside opening and closing tag</span>
+
+
+Known issues
+————————————
+
+- Can't be used for snippets, each function closes it's tag so you cannot
+  define the start of a page in one place and the end in another. But it's in
+  the TODO list ;)
+
+- Special care has to be taken when giving complex strings of parameters for
+  inner code since the regexp that quotes inside html parameters stops at
+  spaces. So you have to write:
+
+(span "style=color:red;text-align:center;" "something") ; -> ok
+
+And not:
+
+(span "style=color: red; text-align: center;" "something") ; -> wrong, will spit bad HTML code
+
+I might make a better regexp, but I plan to make this DSL even more closer to
+HTML, so I wont put time on that. The final idea is to be able to write this:
+
+(span class="foo" id="bar" style="color: red; text-align: center;" "something")
+
+
+Disclaimer
+——————————
+
+This is unfinished and experimental code from a newlisp newbie.
