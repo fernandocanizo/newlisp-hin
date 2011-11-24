@@ -3,6 +3,28 @@
 
 ; just a quick test to see how the function should look so I can program the macro which will create them
 
-(define (html-tag innerCode betweenTagsCode)
-	; as a side effect, if innerCode is nil, the 'if' properly resolves so the 'append' don't complain
-	(append "<html" (if (> (length innerCode) 0) (append " " innerCode ">") ">") (if (nil? betweenTagsCode) "" betweenTagsCode) "</html>"))
+(define (html-tag (innerCode ""))
+	(append "<html"
+		; as a side effect, if innerCode is nil, the 'if' properly resolves so the 'append' don't complain
+		(if (> (length innerCode) 0)
+			(append " " innerCode ">") ">")
+		(let (betweenTagsContent "")
+			(doargs (arg)
+				(set 'betweenTagsContent
+					(append betweenTagsContent
+						(if (nil? arg) "" arg))))
+			betweenTagsContent)
+		"</html>"))
+
+
+# test it
+
+(println (html-tag))
+
+(println (html-tag "just inner"))
+
+(println (html-tag "inner" "one between"))
+
+(println (html-tag "inner" "one" "two" "three"))
+
+(println (html-tag "inner" "one" nil "three"))
