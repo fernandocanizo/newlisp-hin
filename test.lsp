@@ -10,7 +10,7 @@
 (set 'result
 	(html "lang=en"
 		(head ""
-			(title "Testing this awesome idea"))
+			(title "" "Testing this awesome idea"))
 		(body ""
 			(h1 "id=title" "Awesome!")
 			(time "datetime=2011-10-29 pubdate" "29 de octubre") ; time clashes with newlisp time, but we're in context hin now
