@@ -5,7 +5,7 @@
 ;; @description DSL for HTML tags
 ;; @version 2013.05.13
 
-; TODO properly indent output would be nice
+; TODO properly indented output would be nice
 
 (context 'hin)
 
