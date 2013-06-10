@@ -302,34 +302,35 @@
 	))
 
 
-;; append globalAttributes to every element defined in tags
+;; compose proper symbols for every possible attribute:
+;; boolean attributes get names with a postfixed dot, example: hidden.
+;; the rest get names with postfixed equal sign, example: class=
+(define (build-attribute-symbols lst-attributes)
+	(dolist (item lst-attributes)
+		(if (list? item)
+			(let (attr (item 0))
+				(set (sym (string attr "=")) (string attr "=")))
+			; else item is an attribute
+			(if (find item booleanAttributes)
+				(set (sym (string item ".")) item)
+				; else
+				(set (sym (string item "=")) (string item "="))))))
+
+
+;; append globalAttributes to every element defined in tags and build proper symbols
 (dolist (element (copy tags))
 	(if (list? element)
-		(replace element tags (list (element 0) (append globalAttributes (element 1))))
+		(begin
+			; build attribute symbols
+			(build-attribute-symbols (element 1))
+			; append global attributes
+			(replace element tags (list (element 0) (append globalAttributes (element 1)))))
 		; else
 		(replace element tags (list element globalAttributes))))
 
 
-; TODO remove?
-; (setq allAttributes (copy globalAttributes)) ; start with globalAttributes...
-; (dolist (a specialAttributes) ; ... then add the rest
-; 	(dolist (b (last a))
-; 		(if (not (member b allAttributes))
-; 			(push b hin:allAttributes -1))))
-
-; TODO if allAttributes is not needed elsewhere, then build constants in one step instead of this
-; of maybe I can use this one to separate booleans from key/value attributes, which is a planned feature
-; (dolist (a allAttributes))
-
-; (define (build-tag-attribute str-tag lst-attributes)
-; 	(list str-tag lst-attributes))
-
-; (dolist (t tags)
-; 	(let (auxSA (assoc t specialAttributes))
-; 		(if (true? auxSA)
-; 			(push (build-tag-attribute t (flat (list globalAttributes (last auxSA)))) tags+attributes)
-; 			; else put only global attributes
-; 			(push (build-tag-attribute t globalAttributes) tags+attributes))))
+;; build symbols for global attributes
+(build-attribute-symbols globalAttributes)
 
 
 ; macro which builds every htmltag-function
@@ -357,3 +358,5 @@
 ; create the htmltag-functions
 ; (dolist (tag tags)
 ; 	(hin tag))
+
+(exit)
