@@ -347,54 +347,83 @@
 (define-macro (hin:hin lst-element-attributes)
 	(let (element (nth 0 (eval lst-element-attributes)))
 
-		;; Note: I can use constant to override primitives
+		;; Note: I can use constant to overwrite already defined symbols
 		;; but for the time being I prefer to just throw an error
-		;; will decide what to do when one appears
-		(if (primitive? element)
-			(throw (string element " is a primitive")))
+		;; will decide what to do when a conflict appears
+		(if (protected? (sym element))
+			(throw (string element " is already defined.")))
 
 		(eval (list 'define (list (sym element))
 			(list 'letn (list
+				(list 'standAlone (list 'find element 'standaloneTags))
 				(list 'validAttributes (list 'quote (nth 1 (eval lst-element-attributes))))
 				(list 'innerCode (list 'string "<" element)) ; holds attributes and values
 				(list 'betweenTags "") ; holds content
-; 				(list 'keepOpen (list '= "KEEP_OPEN" ($args -1)))
-				(list 'keepOpen (list '= "KEEP_OPEN" (list '$args -1)))
+				;; if you need to provide both CONTINUE and KEEP_OPEN, they must be ordered like this:
+				;; (... CONTINUE KEEP_OPEN)
+				(list 'keepOpen (list 'and (list '>= (list 'length '$args) 1) (list '= "KEEP_OPEN" (list '$args -1))))
+				(list 'continue (list 'or
+					(list 'and (list '>= (list 'length '$args) 1) (list '= "CONTINUE" (list '$args -1)))
+					(list 'and (list '>= (list 'length '$args) 2) (list '= "CONTINUE" (list '$args -2)))))
 				; can't touch $idx, so to consume arbitrarily the arguments, I need to copy argument list and manage it myself
-				(list 'myArgs (list 'if (list 'true? 'keepOpen) (list 0 -1 '$args) '$args)))
-; 				(list 'myArgs (if (true? keepOpen) (list 0 -1 '$args) ('$args))))
+				(list 'myArgs
+					(list 'if (list 'and (list 'true? 'keepOpen) (list 'true? 'continue))
+						(list 0 -2 '$args)
+						; else
+						(list 'if (list 'or (list 'true? 'keepOpen) (list 'true? 'continue))
+							(list 0 -1 '$args)
+							; else
+							'$args))))
 
 				(list 'do-until (list 'null? 'myArgs)
 					(list 'let (list (list 'currentArg (list 'pop 'myArgs)))
-						; currentArg comes evaluated, so gotta use sym, quoting is of no use
-						(list 'if (list 'protected? (list 'sym 'currentArg))
-							; check if it's valid for this element
-							(list 'let (list 'attrIndex (list 'check-attributes element (list 0 -1 'currentArg) 'validAttributes))
-								(list 'if (list 'nil? 'attrIndex)
-									; we want valid HTML5, stop here Mr.
-									(list 'throw (string currentArg " isn't a valid attribute for " element))
-									; else check which kind of attribute (boolean or key=value)
-									(list 'if (list 'ends-with 'currentArg "=")
-										(list 'let (list 'attrValue (list 'pop 'myArgs))
-											(list 'if (list 'list? (list 'validAttributes 'attrIndex)) ; attribute has allowed values, check it's valid
-												(list 'if (list 'find 'attrValue (list 'validAttributes 1))
-													(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))
-													; else invalid value, stop here Mrs.
-													(list 'throw (string currentArg " doesn't accepts " 'attrValue " as a valid value")))
-											; else accept any value and append everything into innerCode
-											(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))))
-										; else it's a boolean attribute, strip last character (dot)
-										(list 'setq 'innerCode (list 'string 'innerCode " " (list 0 -1 'currentArg))))))
+						(list 'if (list 'nil? 'continue) ; skip innerCode building if this is a continuation
+							; currentArg comes evaluated, so gotta use sym, quoting is of no use
+							(list 'if (list 'protected? (list 'sym 'currentArg))
+								; check if it's valid for this element
+								(list 'let (list 'attrIndex (list 'check-attributes element (list 0 -1 'currentArg) 'validAttributes))
+									(list 'if (list 'nil? 'attrIndex)
+										; we want valid HTML5, stop here Mr.
+										(list 'throw (string 'currentArg " isn't a valid attribute for " element "."))
+										; else check which kind of attribute (boolean or key=value)
+										(list 'if (list 'ends-with 'currentArg "=")
+											(list 'let (list
+												(list 'attrValue (list 'pop 'myArgs))
+												(list 'attrItem (list 'validAttributes 'attrIndex)))
 
-								; else it's just content
-								(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg)))))
+												(list 'if (list 'list? 'attrItem) ; attribute has allowed values, check it's valid
+													(list 'if (list 'find 'attrValue (list 'attrItem 1))
+														(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))
+														; else invalid value, stop here Mrs.
+														(list 'throw (string 'currentArg " doesn't accepts " 'attrValue " as a valid value. $args:\n" '$args)))
+												; else accept any value and append everything into innerCode
+												(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))))
+											; else it's a boolean attribute, strip last character (dot)
+											(list 'setq 'innerCode (list 'string 'innerCode " " (list 0 -1 'currentArg))))))
 
-				(list 'if (list 'true? 'keepOpen)
-					(list 'string 'innerCode ">" 'betweenTags)
-					; else close tag
-					(list 'string 'innerCode ">" 'betweenTags "</" element ">")))))))
+									; TODO this code repetition might need refactoring
+									; else it's just content
+									(list 'if (list 'true? 'standAlone) ; there shouldn't be content
+										(list 'throw (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
+										; else
+										(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg))))
+								; else is continued content
+								(list 'if (list 'true? 'standAlone) ; there shouldn't be content
+									(list 'throw (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
+									; else
+									(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg))))
+
+					(list 'if (list 'true? 'keepOpen)
+						(list 'string (list 'if (list 'nil? 'continue) (list 'string 'innerCode ">") "") 'betweenTags)
+						; else close tag
+						(list 'string (list 'if (list 'nil? 'continue) (list 'string 'innerCode ">") "") 'betweenTags
+							(list 'if (list 'true? 'standAlone)
+								""
+								(list 'string "</" element ">")))))))))))
 
 
 ;; create the element functions
 (dolist (e elements)
 	(hin e))
+
+(context MAIN)
