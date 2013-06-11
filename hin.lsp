@@ -10,6 +10,7 @@
 (context 'hin)
 
 (constant 'KEEP_OPEN "KEEP_OPEN") ; given as final parameter allows element to be open ended, so it can receive more content
+(constant 'CONTINUE "CONTINUE") ; given as final, or second to final parameter (if CONTINUE is also given) tells element is being continued from a previous snippet
 
 (constant 'doctype "<!DOCTYPE html>\n")
 
