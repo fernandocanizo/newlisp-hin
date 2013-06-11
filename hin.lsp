@@ -161,29 +161,24 @@
 		("value")) ; value must be an integer and it's use is only valid when li's inside an ol element
 	("ol" ("start" "reversed")) ; start must be an integer
 	"ul"
-	"a" ; DEL
 	("a" ("href" "hreflang" "rel" "target" "type" "media" "ping"))
 	"abbr"
 	;; not officially deprecated by HTML5, but shouldn't be used because it's presentational not semantic
 	;; "b"
 	"bdo"
-	"blockquote" ; DEL
 	("blockquote" ("cite"))
 	"br"
 	"cite"
 	"code"
-	"del" ; DEL
 	("del" ("cite" "datetime"))
 	"dfn"
 	"em"
 	;; "i" isn't officially deprecated by HTML5, but shouldn't be used because it's presentational not semantic
  	;; "i"
-	"ins" ; DEL
 	("ins" ("cite" "datetime"))
 	"kbd"
 	"p"
 	"pre"
-	"q" ; DEL
 	("q" ("cite"))
 	"samp"
 	"small" ; unlike "big", this one isn't deprecated, HTML5's redefined it's semantics
@@ -191,15 +186,10 @@
 	"sub"
 	"sup"
 	"var"
-	"area" ; DEL
 	("area" ("alt" "coords" "download" "href" "shape" "target" "hreflang" "media" "ping" "rel" "type"))
-	"img" ; DEL
 	("img" ("alt" "height" "ismap" "src" "usemap" "width"))
-	"map" ; DEL
 	("map" ("name"))
-	"object" ; DEL
 	("object" ("data" "height" "name" "type" "usemap" "width" "form"))
-	"param" ; DEL
 	("param" ("name" "value"))
 	("button"
 		("disabled" "name"
