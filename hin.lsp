@@ -92,6 +92,13 @@
 	))
 
 
+;; Elements with no closing tag. All properties are coded using attributes
+;; Taken from http://www.html-5.com/tags/html-tag-list.html "HTML Elements - Content Model: Void"
+(setq standaloneTags '(
+	"area" "base" "br" "col" "command" "embed" "hr" "img" "input" "keygen" "link" "meta" "param" "source" "wbr"
+	))
+
+
 ;; Note: boolean attributes symbols are defined without the equal sign at the end,
 ;; so interpreter will bark if one tries to use one with a value
 (setq booleanAttributes '( ; taken from w3.org, with some minor additions by conan
