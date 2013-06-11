@@ -2,12 +2,14 @@
 ;; Creation Date: Wed, 08 May 2013 09:41:37 -0300
 ;; @author Fernando Canizo (aka conan) - http://conan.muriandre.com/
 ;; @module hin
-;; @description DSL for HTML tags
+;; @description DSL for HTML5
 ;; @version 2013.05.13
 
 ; TODO properly indented output would be nice
 
 (context 'hin)
+
+(constant 'KEEP_OPEN "KEEP_OPEN") ; given as final parameter allows element to be open ended, so it can receive more content
 
 (constant 'doctype "<!DOCTYPE html>\n")
 
@@ -107,12 +109,11 @@
 
 
 ; TODO sort this once I finish with the book
-; TODO maybe I should build just one array with tags and attributes, need to solve the issue with automatically appending global attributes
 ;; Format can be one of these three:
 ;; "<tag>" ; if no special attributes
 ;; ("<tag>" (["attr1" [...]])) ; the tag and a list of attributes
 ;; ("<tag>" ("attr1" ("allowed-value-1" [...]))) ; the tag, a list of attributes, and some attributes with a list of allowed values
-(setq tags '(
+(setq elements '(
 	"address"
 	("base" ; TODO there can be only one
 		("href" "target"))
@@ -309,54 +310,93 @@
 	(dolist (item lst-attributes)
 		(if (list? item)
 			(let (attr (item 0))
-				(set (sym (string attr "=")) (string attr "=")))
+				(constant (sym (string attr "=")) (string attr "=")))
 			; else item is an attribute
 			(if (find item booleanAttributes)
-				(set (sym (string item ".")) item)
+				(constant (sym (string item ".")) (string item "."))
 				; else
-				(set (sym (string item "=")) (string item "="))))))
+				(constant (sym (string item "=")) (string item "="))))))
 
 
-;; append globalAttributes to every element defined in tags and build proper symbols
-(dolist (element (copy tags))
-	(if (list? element)
+;; append globalAttributes to every element defined in elements and build proper symbols
+(dolist (e (copy elements))
+	(if (list? e)
 		(begin
 			; build attribute symbols
-			(build-attribute-symbols (element 1))
+			(build-attribute-symbols (e 1))
 			; append global attributes
-			(replace element tags (list (element 0) (append globalAttributes (element 1)))))
+			(replace e elements (list (e 0) (append globalAttributes (e 1)))))
 		; else
-		(replace element tags (list element globalAttributes))))
+		(replace e elements (list e globalAttributes))))
 
 
 ;; build symbols for global attributes
 (build-attribute-symbols globalAttributes)
 
 
-; macro which builds every htmltag-function
-; TODO maybe I don't need to test tagName with symbol, maybe just have to use the evaluated result
-; TODO modify macro to build a function which test if attr is allowed for tag
-; TODO don't consume another argument if attribute is boolean
-; (define-macro (hin:hin tagName)
-; 	(string (list 'define (list (sym (if (symbol? tagName) (string "." (eval tagName)) (string "." tagName))))
-; 		(list 'let (list
-; 			(list 'innerCode (list 'string "<" (eval tagName))) ; holds attributes and values
-; 			(list 'betweenTags "") ; holds content
-; 			(list 'myArgs '$args)) ; can't touch $idx, so to consume arbitrarily the arguments, I need to copy argument list and manage it myself
-; 
-; 			(list 'do-until (list 'null? 'myArgs)
-; 				(list 'let (list (list 'currentArg (list 'pop 'myArgs)))
-; 					(list 'if (list 'protected? (list 'sym 'currentArg))
-; 						; get next arg (which is value for attribute) and append everything into innerCode
-; 						(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg (list 'pop 'myArgs)))
-; 						; else
-; 						(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg)))))
-; 
-; 			(list 'string 'innerCode ">" 'betweenTags "</" (eval tagName) ">")))))
+(define (compare-list-or-atom attr lst-or-atom)
+	(if (list? lst-or-atom)
+		(= attr (lst-or-atom 0))
+		; else
+		(= attr lst-or-atom)))
 
 
-; create the htmltag-functions
-; (dolist (tag tags)
-; 	(hin tag))
+(define (check-attributes element attribute lst-valid-attributes)
+	(find attribute lst-valid-attributes compare-list-or-atom))
 
-(exit)
+
+; macro which builds every element function
+(define-macro (hin:hin lst-element-attributes)
+	(let (element (nth 0 (eval lst-element-attributes)))
+
+		;; Note: I can use constant to override primitives
+		;; but for the time being I prefer to just throw an error
+		;; will decide what to do when one appears
+		(if (primitive? element)
+			(throw (string element " is a primitive")))
+
+		(eval (list 'define (list (sym element))
+			(list 'letn (list
+				(list 'validAttributes (list 'quote (nth 1 (eval lst-element-attributes))))
+				(list 'innerCode (list 'string "<" element)) ; holds attributes and values
+				(list 'betweenTags "") ; holds content
+; 				(list 'keepOpen (list '= "KEEP_OPEN" ($args -1)))
+				(list 'keepOpen (list '= "KEEP_OPEN" (list '$args -1)))
+				; can't touch $idx, so to consume arbitrarily the arguments, I need to copy argument list and manage it myself
+				(list 'myArgs (list 'if (list 'true? 'keepOpen) (list 0 -1 '$args) '$args)))
+; 				(list 'myArgs (if (true? keepOpen) (list 0 -1 '$args) ('$args))))
+
+				(list 'do-until (list 'null? 'myArgs)
+					(list 'let (list (list 'currentArg (list 'pop 'myArgs)))
+						; currentArg comes evaluated, so gotta use sym, quoting is of no use
+						(list 'if (list 'protected? (list 'sym 'currentArg))
+							; check if it's valid for this element
+							(list 'let (list 'attrIndex (list 'check-attributes element (list 0 -1 'currentArg) 'validAttributes))
+								(list 'if (list 'nil? 'attrIndex)
+									; we want valid HTML5, stop here Mr.
+									(list 'throw (string currentArg " isn't a valid attribute for " element))
+									; else check which kind of attribute (boolean or key=value)
+									(list 'if (list 'ends-with 'currentArg "=")
+										(list 'let (list 'attrValue (list 'pop 'myArgs))
+											(list 'if (list 'list? (list 'validAttributes 'attrIndex)) ; attribute has allowed values, check it's valid
+												(list 'if (list 'find 'attrValue (list 'validAttributes 1))
+													(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))
+													; else invalid value, stop here Mrs.
+													(list 'throw (string currentArg " doesn't accepts " 'attrValue " as a valid value")))
+											; else accept any value and append everything into innerCode
+											(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))))
+										; else it's a boolean attribute, strip last character (dot)
+										(list 'setq 'innerCode (list 'string 'innerCode " " (list 0 -1 'currentArg))))))
+
+								; else it's just content
+								(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg)))))
+
+				(list 'if (list 'true? 'keepOpen)
+					(list 'string 'innerCode ">" 'betweenTags)
+					; else close tag
+					(list 'string 'innerCode ">" 'betweenTags "</" element ">")))))))
+
+
+;; create the element functions
+(dolist (e elements)
+	(hin e))
