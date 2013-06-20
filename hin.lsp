@@ -6,6 +6,9 @@
 ;; @version 2013.05.13
 
 ; TODO properly indented output would be nice
+; TODO add terminating comments to classed and idded divs
+; TODO don't build all functions on entry, check for defined symbol and create only if not existant
+; TODO examine the continue/keep_open thing. Maybe continue could be given at the start.
 
 (context 'hin)
 
