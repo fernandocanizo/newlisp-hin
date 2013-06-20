@@ -390,7 +390,7 @@
 							; else
 							'$args))))
 
-				(list 'do-until (list 'null? 'myArgs)
+				(list 'do-while 'myArgs
 					(list 'let (list (list 'currentArg (list 'pop 'myArgs)))
 						(list 'if (list 'nil? 'continue) ; skip innerCode building if this is a continuation
 							; currentArg comes evaluated, so gotta use sym, quoting is of no use
