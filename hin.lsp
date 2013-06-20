@@ -366,7 +366,7 @@
 		;; but for the time being I prefer to just throw an error
 		;; will decide what to do when a conflict appears
 		(if (protected? (sym element))
-			(throw (string element " is already defined.")))
+			(throw-error (string element " is already defined.")))
 
 		(eval (list 'define (list (sym element))
 			(list 'letn (list
@@ -401,7 +401,7 @@
 								(list 'let (list 'attrIndex (list 'check-attributes element (list 0 -1 'currentArg) 'validAttributes))
 									(list 'if (list 'nil? 'attrIndex)
 										; we want valid HTML5, stop here Mr.
-										(list 'throw (string 'currentArg " isn't a valid attribute for " element "."))
+										(list 'throw-error (string 'currentArg " isn't a valid attribute for " element "."))
 										; else check which kind of attribute (boolean or key=value)
 										(list 'if (list 'ends-with 'currentArg "=")
 											(list 'let (list
@@ -412,7 +412,7 @@
 													(list 'if (list 'find 'attrValue (list 'attrItem 1))
 														(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))
 														; else invalid value, stop here Mrs.
-														(list 'throw (string 'currentArg " doesn't accepts " 'attrValue " as a valid value. $args:\n" '$args)))
+														(list 'throw-error (string 'currentArg " doesn't accepts " 'attrValue " as a valid value. $args:\n" '$args)))
 												; else accept any value and append everything into innerCode
 												(list 'setq 'innerCode (list 'string 'innerCode " " 'currentArg "\"" 'attrValue "\""))))
 											; else it's a boolean attribute, strip last character (dot)
@@ -421,12 +421,12 @@
 									; TODO this code repetition might need refactoring
 									; else it's just content
 									(list 'if (list 'true? 'standAlone) ; there shouldn't be content
-										(list 'throw (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
+										(list 'throw-error (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
 										; else
 										(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg))))
 								; else is continued content
 								(list 'if (list 'true? 'standAlone) ; there shouldn't be content
-									(list 'throw (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
+									(list 'throw-error (string element " is a standalone tag, it doesn't accepts content. You tried to put:\n" 'betweenTags))
 									; else
 									(list 'setq 'betweenTags (list 'string 'betweenTags 'currentArg))))
 
