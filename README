@@ -1,73 +1,75 @@
-HTML Domain Specific Language (DSL) for newLISP
-———————————————————————————————————————————————
+HTML5 Domain Specific Language (DSL) for newLISP
+————————————————————————————————————————————————
 
-The idea is to be able to write newlisp code as if you were writing HTML,
+The idea is to be able to write newlisp code as if you were writing HTML5,
 avoiding the use of template tags.
 
 So instead of writing:
 
 <html lang="en">
 	<head>
-		<title><% (print "This is my title") %></title>
+		<title><% (print my-title) %></title>
 	</head>
 </html>
 
 Were you have to use an opening <% and a closing %> each time you need to
-insert newlisp code, you write:
+insert newlisp code (in this case variable my-title), you write:
 
 (html "lang=en"
-	(head ""
-		(title "" "This is my title")))
+	(head
+		(title my-title)))
 
 And everything is newlisp code.
 
 To achieve this every HTML5 tag has it's counterpart function.
 
-Every function needs at least one parameter for the inner code, hence the empty
-strings in the example above. Also they can have any number of parameters
-after, which are considered to be the code or text between opening and closing
-tag.
-
-Further parameters are concatenated to second one.
-
 Every function returns a string with the computed html code.
 
 			
-Nomenclature
-————————————
-
-inner code: the code inside the html tag, for example:
-
-<span innerCode></span>
-<span class="foo" id="bar"></span>
-
-between content: the text or code that goes between the opening and closing tag, for example:
-
-<span>betweenContent</span>
-<span>Something that goes inside opening and closing tag</span>
-
-
 Known issues
 ————————————
 
-- Can't be used for snippets, each function closes it's tag so you cannot
-  define the start of a page in one place and the end in another. But it's in
-  the TODO list ;)
+1. While I've made handy constants to specify when a tag has to be kept open or
+when it's a continuation from a previous snippet, the functions just receive
+the value, which is a string, so it cannot differentiate the strings
+"KEEP_OPEN" or "CONTINUE" from the real intention to keep open a tag or to
+continue a previous opened tag. However the case for using those exact strings
+at the very last part of content of a tag it's pretty exceptional, so I think
+we're safe. But keep this in mind should you encounter strange behaviour.
 
-- Special care has to be taken when giving complex strings of parameters for
-  inner code since the regexp that quotes inside html parameters stops at
-  spaces. So you have to write:
 
-(span "style=color:red;text-align:center;" "something") ; -> ok
+2. One probably will want to split code to allow for reusable snippets, for
+example a header function to send on every page request. Also you can think of
+a footer, navbar or sidebar too. So you could try this:
 
-And not:
+(context 'NotHin)
+(define (header)
+	(context hin) ; this wont work
+	(... a bunch of calls to hin functions ...)
+	(context MAIN))
 
-(span "style=color: red; text-align: center;" "something") ; -> wrong, will spit bad HTML code
+Because newlisp double pass parser, on evaluation time newlisp will see calls
+like NotHin:html instead of hin:html, and an error will arise.
+ 
+So to define snippets of code you need to use wrap-in-context macro or
+replace-this-context-macro like this:
 
-I might make a better regexp, but I plan to make this DSL even more closer to
-HTML, so I wont put time on that. The final idea is to be able to write this:
 
-(span class="foo" id="bar" style="color: red; text-align: center;" "something")
+(context ;NotHin)
+(define (header)
+	(wrap-in-context 'hin
+		(... safe calls to hin functions ...)))
+
+Now wrap-in-context must be used with care, because it will overwrite any other
+context, not just current. So if you need to take data from, lets say a context
+holding data coming from a database, you'll need to use replace-this-context,
+which will change only context where current function is being defined.
+
+(context ;NotHin)
+(define (header)
+	(replace-this-context 'hin
+		(... safe calls to hin functions ...)))
+
 
 
 Disclaimer
