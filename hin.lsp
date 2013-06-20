@@ -346,6 +346,18 @@
 	(find attribute lst-valid-attributes compare-list-or-atom))
 
 
+;; find longest element or attribute and build a constant with a safe value for length tests
+(let (
+	(longer 0)
+	(flat-elements (flat elements)))
+
+	(dolist (e flat-elements)
+		(let (l (length e))
+			(if (> l longer)
+				(setq longer l))))
+	(constant 'LONGEST_SYMBOL (+ longer 10))) ; add 10 to be safe
+
+
 ; macro which builds every element function
 (define-macro (hin:hin lst-element-attributes)
 	(let (element (nth 0 (eval lst-element-attributes)))
@@ -382,7 +394,9 @@
 					(list 'let (list (list 'currentArg (list 'pop 'myArgs)))
 						(list 'if (list 'nil? 'continue) ; skip innerCode building if this is a continuation
 							; currentArg comes evaluated, so gotta use sym, quoting is of no use
-							(list 'if (list 'protected? (list 'sym 'currentArg))
+							; also test length first to avoid: "ERR: string token too long in function sym"
+							; because currentArg could contain lengthy HTML strings from inner evaluations
+							(list 'if (list 'and (list '< (list 'length 'currentArg) LONGEST_SYMBOL) (list 'protected? (list 'sym 'currentArg)))
 								; check if it's valid for this element
 								(list 'let (list 'attrIndex (list 'check-attributes element (list 0 -1 'currentArg) 'validAttributes))
 									(list 'if (list 'nil? 'attrIndex)
